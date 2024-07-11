@@ -461,12 +461,12 @@ static int doDisassemble(int argc, char **argv, M6502 *mpu)
   return 2;
 }
 
-
 int main(int argc, char **argv)
 {
   M6502 *mpu= M6502_new(0, 0, 0);
   int bTraps= 0;
   int countCycles = 0;
+  int dumpMemoryAtEnd = 0;
 
   program= argv[0];
 
@@ -483,6 +483,7 @@ int main(int argc, char **argv)
 	if      (!strcmp(*argv, "-B"))  bTraps= 1;
 	else if (!strcmp(*argv, "-c"))	countCycles = 1;
 	else if (!strcmp(*argv, "-d"))	n= doDisassemble(argc, argv, mpu);
+	else if (!strcmp(*argv, "-D"))	dumpMemoryAtEnd = 1;
 	else if (!strcmp(*argv, "-G"))	n= doGtrap(argc, argv, mpu);
 	else if (!strcmp(*argv, "-h"))	n= doHelp(argc, argv, mpu);
 	else if (!strcmp(*argv, "-i"))	n= doLoadInterpreter(argc, argv, mpu);
@@ -534,6 +535,15 @@ int main(int argc, char **argv)
   }
   if (countCycles){
     fprintf(stderr, "Instructions: %lu Cycles: %lu\n", isns, cycles);
+  }
+
+  if ( dumpMemoryAtEnd ) {
+    remove( "run6502.dmp" );
+    FILE * dumpFile = fopen( "run6502.dump", "wb" );
+    if ( dumpFile ) {
+      fwrite( &mpu->memory[0], 1, 0xffff, dumpFile );
+      fclose( dumpFile );
+    }
   }
   M6502_delete(mpu);
 
